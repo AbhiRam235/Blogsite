@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ author.username }} | StuGrw Blogs</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8f8f8; }
+    .material-icons { font-size: 18px; }
+    .blog-meta span { display: flex; align-items: center; gap: 4px; }
+    .navbar-shadow { box-shadow: 0 2px 8px 0 rgba(0,0,0,.04);}
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+  {% include 'includes/navbar.html' %}
+
+  <div class="max-w-screen-lg mx-auto flex flex-col md:flex-row pt-8 px-4">
+    <!-- Left: Profile and About -->
+    <aside class="md:w-1/4 w-full mb-8 md:mb-0 md:mr-10">
+      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center">
+        {% if author.profile_photo %}
+          <img src="{{ author.profile_photo.url }}" alt="{{ author.username }} profile"
+               class="w-24 h-24 rounded-full object-cover mb-4">
+        {% else %}
+          <div class="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-4">
+            {{ author.username|slice:":1"|upper }}
+          </div>
+        {% endif %}
+        <h2 class="text-2xl font-bold mb-2">{{ author.username }}</h2>
+        <div class="text-gray-500 mb-2">{{ followers_count|floatformat:0 }} followers</div>
+        {% if author.bio %}
+          <p class="text-gray-600 text-center mb-4">{{ author.bio }}</p>
+        {% endif %}
+        {% if user.is_authenticated and author != user %}
+          <form method="post" action="{% url 'follow_user' author.username %}">
+            {% csrf_token %}
+            {% if author in user.following.all %}
+              <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-full font-semibold text-sm shadow hover:bg-green-700">
+                Following
+              </button>
+            {% else %}
+              <button type="submit" class="bg-black text-white px-6 py-2 rounded-full font-semibold text-sm shadow hover:bg-gray-800">
+                Follow
+              </button>
+            {% endif %}
+          </form>
+        {% endif %}
+      </div>
+    </aside>
+
+    <!-- Right: Blogs List -->
+    <main class="md:w-3/4 w-full">
+      <h1 class="text-3xl font-bold mb-6">{{ author.username }}</h1>
+      <div class="border-b mb-6 flex space-x-8 text-lg">
+        <span class="pb-2 border-b-2 border-black">Home</span>
+      </div>
+      <form method="get" class="mb-6 flex items-center gap-3">
+        <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search blogs..." class="border rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-teal-500">
+        <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">Search</button>
+      </form>
+
+      <div class="space-y-8">
+        {% for blog in blogs %}
+        <div class="bg-white rounded-xl shadow-md flex flex-col md:flex-row gap-5 p-5 hover:shadow-lg transition-transform">
+          <div class="flex-1">
+            <div class="flex items-center mb-1">
+              {% if blog.is_pinned %}
+                <span class="ml-2 text-yellow-500">★ Pinned</span>
+              {% endif %}
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-1">
+              <a href="{% url 'blog_detail' slug=blog.slug %}" class="hover:underline">{{ blog.title }}</a>
+            </h3>
+            <p class="text-gray-600 mb-2">{{ blog.preview_content|truncatewords:15 }}</p>
+            <!-- Meta Info: Consistent icons -->
+            <div class="flex justify-between items-center text-gray-500 text-sm mt-2">
+              <div class="flex gap-6 items-center">
+                <span class="flex items-center gap-1">
+                  <i class="material-icons text-base">calendar_today</i>
+                  {{ blog.created_at|date:"M d, Y" }}
+                </span>
+                <span class="flex items-center gap-1 cursor-pointer">
+                  <i class="material-icons text-base">chat_bubble_outline</i> {{ blog.comment_set.count }}
+                </span>
+                <span class="flex items-center gap-1 cursor-pointer">
+                  <i class="material-icons text-base">thumb_up_off_alt</i> {{ blog.like_set.count }}
+                </span>
+                <span class="flex items-center gap-1 cursor-pointer">
+                  <i class="material-icons text-base">bookmark_border</i> {{ blog.save_set.count }}
+                </span>
+              </div>
+              <div class="flex gap-6 items-center">
+                <span class="flex items-center gap-1 cursor-pointer">
+                  <i class="material-icons text-base">share</i>
+                </span>
+              </div>
+            </div>
+          </div>
+          {% if blog.cover_image %}
+          <div class="flex-shrink-0">
+            <img src="{{ blog.cover_image.url }}" alt="cover" class="w-full md:w-44 h-32 object-cover rounded-lg">
+          </div>
+          {% endif %}
+        </div>
+        {% empty %}
+          <div class="text-gray-600">No blogs published yet.</div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</body>
+</html>

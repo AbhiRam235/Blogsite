@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StuGrw Blog</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8f8f8;
+    }
+
+    .material-icons {
+      font-size: 18px;
+    }
+
+    .blog-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen">
+  {% include 'includes/navbar.html' %}
+
+  <div class="max-w-5xl mx-auto px-4 py-8">
+    <h2 class="text-3xl font-semibold mb-6">Welcome to StuGrw</h2>
+
+    <div class="space-y-6">
+    {% if query %}
+      <div class="search-results-info my-4 font-semibold text-gray-700 text-xl">
+      Results for the search query <span class="text-3xl font-bold text-gray-900">"{{ query }}"</span>
+      </div>
+    {% endif %}
+      {% for blog in blogs %}
+      <div class="bg-white rounded-xl shadow-md flex flex-col md:flex-row gap-5 p-5 hover:shadow-lg transition-transform">
+        <div class="flex-1">
+          <p class="text-sm text-gray-500 mb-1">by <strong>{{ blog.author.username }}</strong></p>
+          <h3 class="text-xl font-bold text-gray-800">
+            <a href="{% url 'blog_detail' slug=blog.slug %}" class="hover:underline">{{ blog.title }}</a>
+          </h3>
+          <p class="text-gray-600 mt-2">{{ blog.preview_content|truncatewords:30 }}</p>
+
+          <!-- Meta Info: Arranged like in blog.html -->
+          <div class="flex justify-between items-center mt-4 text-gray-500 text-sm">
+            <div class="flex gap-6 items-center">
+              <span class="flex items-center gap-1">
+                <i class="material-icons text-base">calendar_today</i>
+                {{ blog.created_at|date:"M d, Y" }}
+              </span>
+              <span class="flex items-center gap-1 cursor-pointer">
+                <i class="material-icons text-base">chat_bubble_outline</i> {{ blog.comment_count }}
+              </span>
+              <span class="flex items-center gap-1 cursor-pointer">
+                <i class="material-icons text-base">thumb_up_off_alt</i> {{ blog.like_count }}
+              </span>
+            </div>
+            <div class="flex gap-6 items-center">
+              <span class="flex items-center gap-1 cursor-pointer">
+                <i class="material-icons text-base">bookmark_border</i> {{ blog.save_count }}
+              </span>
+              <span class="flex items-center gap-1 cursor-pointer">
+                <i class="material-icons text-base">share</i>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {% if blog.cover_image %}
+        <div class="flex-shrink-0">
+          <img src="{{ blog.cover_image.url }}" alt="cover" class="w-full md:w-44 h-32 object-cover rounded-lg">
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+
+</html>

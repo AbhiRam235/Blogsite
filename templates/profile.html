@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - {{ user.username }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    {% include 'includes/navbar.html' %}
+    <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+      <!-- Left/Main Column -->
+      <div class="md:col-span-2 col-span-1 flex flex-col gap-6">
+        <div class="bg-white rounded-xl shadow p-6 flex items-center gap-6">
+          {% if user.profile_photo %}
+            <img src="{{ user.profile_photo.url }}" class="w-24 h-24 rounded-full object-cover border-4 border-teal-500" alt="Profile Photo">
+          {% else %}
+            <div class="w-24 h-24 rounded-full bg-teal-500 flex items-center justify-center text-white text-4xl font-bold">{{ user.username|slice:':1'|upper }}</div>
+          {% endif %}
+          <div>
+            <div class="text-3xl font-bold">{{ user.username }}</div>
+            <div class="text-gray-500 mt-1">{{ user.get_role_display }}</div>
+            <a href="{% url 'edit_profile' %}" class="text-teal-600 font-semibold hover:underline transition block mt-2">Edit profile</a>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow p-6">
+          <div class="border-b border-gray-200 mb-6 flex gap-8">
+            <button id="tab-home" class="py-2 px-4 font-semibold text-gray-700 border-b-2 border-teal-500" onclick="showTab('home')">Home</button>
+            <button id="tab-about" class="py-2 px-4 font-semibold text-gray-700" onclick="showTab('about')">About</button>
+          </div>
+          <div id="tab-content-home">
+            <h2 class="text-xl font-semibold mb-4">Your Blogs</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+              {% for blog in user_blogs %}
+              <div class="bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col">
+                <div class="flex items-center gap-4">
+                  {% if blog.cover_image %}
+                    <img src="{{ blog.cover_image.url }}" class="w-20 h-16 rounded object-cover" alt="Cover">
+                  {% endif %}
+                  <div>
+                    <a href="{% url 'blog_detail' slug=blog.slug %}" class="text-lg font-bold text-teal-700 hover:underline">{{ blog.title }}</a>
+                    <div class="text-gray-400 text-sm">{{ blog.created_at|date:'M d, Y' }}</div>
+                  </div>
+                </div>
+              </div>
+              {% empty %}
+              <p class="col-span-2 text-gray-500">You haven't written any blogs yet.</p>
+              {% endfor %}
+            </div>
+            <h2 class="text-xl font-semibold mt-8 mb-4">Saved Blogs</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+              {% for blog in saved_blogs %}
+              <div class="bg-gray-50 rounded-lg shadow-sm p-4 flex flex-col">
+                <div class="flex items-center gap-4">
+                  {% if blog.cover_image %}
+                    <img src="{{ blog.cover_image.url }}" class="w-20 h-16 rounded object-cover" alt="Cover">
+                  {% endif %}
+                  <div>
+                    <a href="{% url 'blog_detail' slug=blog.slug %}" class="text-lg font-bold text-teal-700 hover:underline">{{ blog.title }}</a>
+                    <div class="text-gray-400 text-sm">{{ blog.created_at|date:'M d, Y' }}</div>
+                  </div>
+                </div>
+              </div>
+              {% empty %}
+              <p class="col-span-2 text-gray-500">No blogs saved for reading.</p>
+              {% endfor %}
+            </div>
+          </div>
+          <div id="tab-content-about" class="hidden">
+            <h2 class="text-xl font-semibold mb-4">About</h2>
+            <div class="bg-gray-50 rounded-lg shadow-sm p-6">
+              <form method="post" action="{% url 'edit_profile' %}" class="space-y-4">
+                {% csrf_token %}
+                <label for="bio" class="block font-semibold mb-2">Bio</label>
+                <textarea name="bio" id="bio" rows="4" class="w-full p-2 border rounded" placeholder="Write something about yourself...">{{ user.bio }}</textarea>
+                <button type="submit" class="mt-2 py-2 px-4 bg-teal-600 text-white font-semibold rounded hover:bg-teal-700 transition">Update Bio</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Right Sidebar -->
+      <div class="col-span-1 flex flex-col gap-6">
+        <div class="bg-white rounded-xl shadow p-6">
+          <div class="font-semibold text-lg mb-2 text-center">Followers ({{ followers|length }})</div>
+          <div class="space-y-2">
+            {% for follower in followers %}
+              <div class="flex items-center gap-2">
+                {% if follower.profile_photo %}
+                  <img src="{{ follower.profile_photo.url }}" class="w-8 h-8 rounded-full object-cover border" alt="Profile Photo">
+                {% else %}
+                  <div class="w-8 h-8 rounded-full bg-teal-400 flex items-center justify-center text-white text-base font-bold">{{ follower.username|slice:':1'|upper }}</div>
+                {% endif %}
+                <a href="{% url 'user_blogs' follower.username %}" class="font-medium text-gray-700 hover:underline">{{ follower.username }}</a>
+              </div>
+            {% empty %}
+              <div class="text-gray-400 text-center">No followers yet.</div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="bg-white rounded-xl shadow p-6">
+          <div class="font-semibold text-lg mb-2 text-center">Following ({{ following|length }})</div>
+          <div class="space-y-2">
+            {% for followee in following %}
+              <div class="flex items-center gap-2">
+                {% if followee.profile_photo %}
+                  <img src="{{ followee.profile_photo.url }}" class="w-8 h-8 rounded-full object-cover border" alt="Profile Photo">
+                {% else %}
+                  <div class="w-8 h-8 rounded-full bg-teal-400 flex items-center justify-center text-white text-base font-bold">{{ followee.username|slice:':1'|upper }}</div>
+                {% endif %}
+                <a href="{% url 'user_blogs' followee.username %}" class="font-medium text-gray-700 hover:underline">{{ followee.username }}</a>
+              </div>
+            {% empty %}
+              <div class="text-gray-400 text-center">Not following anyone yet.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+        function showTab(tab) {
+            var homeTab = document.getElementById('tab-content-home');
+            var aboutTab = document.getElementById('tab-content-about');
+            var btnHome = document.getElementById('tab-home');
+            var btnAbout = document.getElementById('tab-about');
+            if (tab === 'home') {
+                homeTab.classList.remove('hidden');
+                aboutTab.classList.add('hidden');
+                btnHome.classList.add('border-b-2', 'border-teal-500');
+                btnAbout.classList.remove('border-b-2', 'border-teal-500');
+            } else {
+                homeTab.classList.add('hidden');
+                aboutTab.classList.remove('hidden');
+                btnHome.classList.remove('border-b-2', 'border-teal-500');
+                btnAbout.classList.add('border-b-2', 'border-teal-500');
+            }
+        }
+        showTab('home');
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    {% include 'includes/navbar.html' %}
+    <div class="max-w-md mx-auto mt-20 bg-white rounded-lg shadow p-8">
+        <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label class="block font-semibold mb-2">Username</label>
+                <input type="text" name="username" class="w-full p-2 border rounded" required title="Enter your username" placeholder="Username">
+            </div>
+            <div>
+                <label class="block font-semibold mb-2">Password</label>
+                <input type="password" name="password" class="w-full p-2 border rounded" required title="Enter your password" placeholder="Password">
+            </div>
+            <button type="submit" class="w-full py-2 px-4 bg-teal-600 text-white font-semibold rounded hover:bg-teal-700 transition">Login</button>
+        </form>
+        <p class="mt-4 text-center text-gray-600">Don't have an account? <a href="{% url 'signup' %}" class="text-teal-600 hover:underline">Sign up</a></p>
+    </div>
+</body>
+</html>

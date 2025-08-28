@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    {% include 'includes/navbar.html' %}
+    <div class="max-w-xl mx-auto mt-12 bg-white rounded-lg shadow p-8">
+        <h2 class="text-2xl font-bold mb-6 text-center">Edit Profile</h2>
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label class="block font-semibold mb-2">Profile Photo</label>
+                {% if user.profile_photo %}
+                    <img src="{{ user.profile_photo.url }}" class="w-20 h-20 rounded-full object-cover mb-2" alt="Profile Photo">
+                {% endif %}
+                {{ form.profile_photo }}
+            </div>
+            <div>
+                <label class="block font-semibold mb-2">Username</label>
+                {{ form.username }}
+            </div>
+            <div>
+                <label class="block font-semibold mb-2">Bio</label>
+                {{ form.bio }}
+            </div>
+            <button type="submit" class="w-full py-2 px-4 bg-teal-600 text-white font-semibold rounded hover:bg-teal-700 transition">Save Changes</button>
+        </form>
+        {% if success %}
+            <p class="mt-4 text-green-600 text-center">{{ success }}</p>
+        {% endif %}
+    </div>
+</body>
+</html>

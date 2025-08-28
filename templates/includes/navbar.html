@@ -1,0 +1,102 @@
+{% load static %}
+<nav class="bg-white p-4 navbar-shadow">
+        <div class="max-w-screen-lg mx-auto flex justify-between items-center">
+            <!-- Left section: Medium logo and Search -->
+            <div class="flex items-center space-x-6">
+                <a href="{% url 'home' %}" class="flex items-center gap-2">
+                  <img src="{% static 'logo.jpg' %}" alt="StuGrw Logo" class="h-8 w-8 rounded-full object-cover" />
+                  <span class="font-bold text-xl text-gray-800">StuGrw</span>
+                </a>
+                <form method="get" action="{% url 'home' %}" class="relative">
+                    <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search" class="pl-8 pr-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-gray-700 text-sm">
+                    <button type="submit" class="absolute left-2 top-1/2 transform -translate-y-1/2">
+                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right section: Write, Notifications, User Avatar -->
+            <div class="flex items-center space-x-4">
+                {% if user.is_authenticated %}
+                <a href="{% url 'write_blog' %}" class="flex items-center text-gray-600 hover:text-gray-900">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
+                    <span class="text-sm">Write</span>
+                </a>
+                {% else %}
+                <a href="{% url 'login' %}" class="flex items-center text-gray-600 hover:text-gray-900">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
+                    <span class="text-sm">Write</span>
+                </a>
+                {% endif %}
+            <div class="relative">
+              <button id="notif-btn" class="text-gray-600 hover:text-gray-900 focus:outline-none relative">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                </svg>
+                {% if notifications and notifications|length > 0 %}
+                  <span class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full px-1.5 py-0.5 text-xs font-bold">{{ notifications|length }}</span>
+                {% endif %}
+              </button>
+              <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 border border-gray-200">
+                <div class="p-4 border-b font-semibold text-gray-700">Notifications</div>
+                <form method="post" action="{% url 'clear_notifications' %}" class="p-2 border-b text-right">
+                  {% csrf_token %}
+                  <button type="submit" class="text-xs text-teal-600 font-semibold hover:underline">Clear All</button>
+                </form>
+                <div class="max-h-64 overflow-y-auto">
+                  {% if notifications and notifications|length > 0 %}
+                    {% for notif in notifications %}
+                      <div class="px-4 py-3 border-b hover:bg-gray-50 text-sm text-gray-800">
+                        {% if notif.type == 'comment' %}
+                          <span class="font-bold">{{ notif.user.username }}</span> commented on your blog <a href="{% url 'blog_detail' slug=notif.blog.slug %}" class="text-teal-600 hover:underline">{{ notif.blog.title }}</a>.
+                        {% elif notif.type == 'like' %}
+                          <span class="font-bold">{{ notif.user.username }}</span> liked your blog <a href="{% url 'blog_detail' slug=notif.blog.slug %}" class="text-teal-600 hover:underline">{{ notif.blog.title }}</a>.
+                        {% endif %}
+                        <span class="block text-xs text-gray-400 mt-1">{{ notif.created_at|timesince }} ago</span>
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="px-4 py-6 text-gray-400 text-center">No notifications yet.</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <script>
+              const notifBtn = document.getElementById('notif-btn');
+              const notifDropdown = document.getElementById('notif-dropdown');
+              if (notifBtn && notifDropdown) {
+                notifBtn.addEventListener('click', function(e) {
+                  e.stopPropagation();
+                  notifDropdown.classList.toggle('hidden');
+                });
+                document.addEventListener('click', function(e) {
+                  if (!notifDropdown.classList.contains('hidden')) {
+                    notifDropdown.classList.add('hidden');
+                  }
+                });
+              }
+            </script>
+                {% if user.is_authenticated %}
+                <div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white font-semibold text-sm">
+                    <a href="{% url 'profile' %}">
+                        {% if user.profile_photo %}
+                        <img src="{{ user.profile_photo.url }}" class="w-24 h-16 rounded-full object-cover border-2 border-teal-900" alt="User profile photo {{ user.username }}">
+                        {% else %}
+                            <div class="w-24 h-24 rounded-full bg-teal-500 flex items-center justify-center text-white text-4xl font-bold">{{ user.username|slice:':1'|upper }}</div>
+                        {% endif %}
+                    </a>
+                </div>
+                <a href="{% url 'logout' %}" class="ml-4 text-teal-600 font-semibold hover:underline">Logout</a>
+                {% else %}
+                <a href="{% url 'login' %}" class="ml-4 text-teal-600 font-semibold hover:underline">Login</a>
+                <a href="{% url 'signup' %}" class="ml-2 text-teal-600 font-semibold hover:underline">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>

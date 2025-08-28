@@ -1,0 +1,150 @@
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: #fff;
+    color: #222;
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 12px 24px;
+}
+
+.logo h1 {
+    font-family: 'Charter', serif;
+    font-weight: 700;
+    font-size: 2rem;
+    margin: 0;
+    color: #222;
+    letter-spacing: -2px;
+}
+
+.search-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.search-box {
+    background: #f5f5f5;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    width: 280px;
+}
+
+.search-icon {
+    fill: #888;
+    margin-right: 8px;
+}
+
+.search-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: 1rem;
+    width: 100%;
+    padding: 8px 0;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.write-btn, .notification-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    color: #222;
+    transition: background 0.2s;
+    border-radius: 6px;
+}
+
+.write-btn:hover, .notification-btn:hover {
+    background: #f5f5f5;
+}
+
+.profile-avatar {
+    background: #222;
+    color: #fff;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-left: 8px;
+}
+
+.main-content {
+    max-width: 680px;
+    margin: 40px auto;
+    padding: 0 16px;
+}
+
+.article-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(60,60,60,0.05);
+    padding: 32px;
+}
+
+.article-header {
+    margin-bottom: 24px;
+}
+
+.article-title {
+    font-family: 'Charter', serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 0 0 12px 0;
+    color: #222;
+}
+
+.article-meta {
+    color: #888;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dot {
+    font-size: 1.2em;
+    margin: 0 4px;
+}
+
+.article-body {
+    font-size: 1.1rem;
+    line-height: 1.7;
+}
+
+.article-image {
+    display: block;
+    max-width: 100%;
+    margin: 28px auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(60,60,60,0.05);
+}

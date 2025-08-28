@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Blog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    {% include 'includes/navbar.html' %}
+    <div class="max-w-2xl mx-auto mt-12 bg-white rounded-lg shadow p-8">
+        <h2 class="text-2xl font-bold mb-6 text-center">Edit Blog</h2>
+        <form method="post" enctype="multipart/form-data" class="space-y-6" id="editBlogForm">
+            {% csrf_token %}
+            <div>
+                <label class="block font-semibold mb-2">Blog Title</label>
+                {{ blog_form.title }}
+            </div>
+            <div>
+                <label class="block font-semibold mb-2">Cover Image</label>
+                {{ blog_form.cover_image }}
+            </div>
+            <hr class="my-6">
+            <h3 class="text-xl font-semibold mb-4">Edit Blocks</h3>
+            {% for block in blocks %}
+            <div class="mb-6 p-4 border rounded bg-gray-50">
+                <div class="mb-2 font-semibold">Block #{{ forloop.counter }}</div>
+                <label class="block font-semibold mb-2">Block Number</label>
+                <input type="number" name="block_number_{{ forloop.counter }}" class="w-full p-2 border rounded" value="{{ block.block_number }}" required title="Block Number" placeholder="Enter block number">
+                <label class="block font-semibold mb-2 mt-2">Content Type</label>
+                <select name="content_type_{{ forloop.counter }}" class="w-full p-2 border rounded" onchange="toggleImageField(this, '{{ forloop.counter }}')" title="Content Type">
+                    <option value="text" {% if block.content_type == 'text' %}selected{% endif %}>Text</option>
+                    <option value="image" {% if block.content_type == 'image' %}selected{% endif %}>Image</option>
+                    <option value="code" {% if block.content_type == 'code' %}selected{% endif %}>Code</option>
+                    <option value="youtube" {% if block.content_type == 'youtube' %}selected{% endif %}>YouTube</option>
+                </select>
+                <label class="block font-semibold mb-2 mt-2">Content</label>
+                <textarea name="content_{{ forloop.counter }}" class="w-full p-2 border rounded" placeholder="Content">{{ block.content }}</textarea>
+                <div id="image-field-{{ forloop.counter }}"{% if block.content_type != 'image' %} style="display:none;"{% endif %}>
+                    <label class="block font-semibold mb-2 mt-2">Image</label>
+                    {% if block.image %}
+                        <img src="{{ block.image.url }}" class="w-32 h-24 object-cover rounded mb-2" alt="Block Image">
+                    {% endif %}
+                    <input type="file" name="image_{{ forloop.counter }}" class="w-full p-2 border rounded" title="Upload image for this block" placeholder="Choose image file">
+                </div>
+            </div>
+            {% endfor %}
+            <button type="submit" class="w-full py-2 px-4 bg-teal-600 text-white font-semibold rounded hover:bg-teal-700 transition">Update Blog</button>
+        </form>
+        <script>
+        function toggleImageField(select, count) {
+            const imageField = document.getElementById(`image-field-${count}`);
+            if (select.value === 'image') {
+                imageField.style.display = '';
+            } else {
+                imageField.style.display = 'none';
+            }
+        }
+        </script>
+    </div>
+</body>
+</html>

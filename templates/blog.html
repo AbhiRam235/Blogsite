@@ -1,0 +1,393 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ blog.title }} | StuGrw Blog</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8f8f8;
+    }
+    .material-icons {
+      font-size: 18px;
+    }
+    .blog-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100 text-gray-800">
+
+  <!-- Navbar -->
+  {% include 'includes/navbar.html' %}
+
+  <!-- Main Content -->
+  <div class="max-w-5xl mx-auto px-4 py-6">
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+
+      <!-- Author Profile Section -->
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center space-x-4">
+          <a href="{% url 'user_blogs' blog.author.username %}" title="View {{ blog.author.username }}'s profile"
+             class="group block focus:outline-none">
+            {% if blog.author.profile_photo %}
+              <img src="{{ blog.author.profile_photo.url }}" alt="Profile Photo"
+                   class="w-14 h-14 rounded-full object-cover border-2 border-gray-300 group-hover:border-teal-500 transition duration-200 group-hover:scale-105">
+            {% else %}
+              <div class="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center text-teal-700 text-xl font-bold group-hover:bg-teal-500 group-hover:text-white transition duration-200 group-hover:scale-105">
+                {{ blog.author.username|slice:":1"|upper }}
+              </div>
+            {% endif %}
+          </a>
+          <div>
+            <a href="{% url 'user_blogs' blog.author.username %}" class="hover:underline text-lg font-semibold text-gray-900">{{ blog.author.username }}</a>
+            {% if blog.author.bio %}
+              <p class="text-sm text-gray-500 mt-1">{{ blog.author.bio|truncatewords:15 }}</p>
+            {% endif %}
+          </div>
+          {% if user.is_authenticated and blog.author != user %}
+            <form method="post" action="{% url 'follow_user' blog.author.username %}" class="ml-4">
+              {% csrf_token %}
+              {% if blog.author in user.following.all %}
+                <button type="submit"
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-sm shadow focus:outline-none focus:ring-2 focus:ring-green-400">
+                  Following
+                </button>
+              {% else %}
+                <button type="submit"
+                        class="bg-blue-500 hover:bg-green-600 text-white px-4 py-1.5 rounded text-sm shadow focus:outline-none focus:ring-2 focus:ring-blue-400">
+                  Follow
+                </button>
+              {% endif %}
+            </form>
+          {% elif not user.is_authenticated %}
+            <a href="{% url 'login' %}" class="ml-4 bg-blue-500 text-white px-4 py-1.5 rounded text-sm shadow hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-blue-400">Login to Follow</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Blog Title -->
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-2xl font-bold">{{ blog.title }}</h2>
+        {% if user.is_authenticated and blog.author == user %}
+        <div class="flex gap-2">
+          <a href="{% url 'edit_blog' blog.slug %}" class="px-3 py-1 rounded bg-teal-600 text-white font-semibold hover:bg-teal-700 transition">Edit</a>
+          <form method="post" action="{% url 'delete_blog' blog.slug %}" onsubmit="return confirm('Are you sure you want to delete this blog post?');">
+            {% csrf_token %}
+            <button type="submit" class="px-3 py-1 rounded bg-red-600 text-white font-semibold hover:bg-red-700 transition">Delete</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Blog Cover Image -->
+      {% if blog.cover_image %}
+        <img src="{{ blog.cover_image.url }}" alt="Cover Image"
+             class="w-full h-64 object-cover rounded mb-4">
+      {% endif %}
+
+      <!-- Blog Content -->
+      {% for block in blog_blocks %}
+        {% if block.content_type == 'text' %}
+          <p class="mb-4 text-lg leading-relaxed">{{ block.content|linebreaksbr }}</p>
+        {% elif block.content_type == 'image' %}
+          <img src="{{ block.image.url }}" alt="Block Image"
+               class="w-full h-64 object-cover rounded mb-4">
+        {% elif block.content_type == 'code' %}
+          <pre class="bg-gray-100 rounded p-4 mb-4 text-sm overflow-x-auto">{{ block.content }}</pre>
+        {% elif block.content_type == 'youtube' %}
+          {% with block.content as yt_url %}
+            {% if 'watch?v=' in yt_url %}
+              {% with yt_url|cut:'https://www.youtube.com/watch?v=' as video_id %}
+                <div class="mb-4 aspect-w-16 aspect-h-9">
+                  <iframe 
+                    src="https://www.youtube.com/embed/{{ video_id }}"
+                    frameborder="0" allowfullscreen title="YouTube video" controls
+                    class="w-full h-64 rounded"></iframe>
+                </div>
+              {% endwith %}
+            {% elif 'youtu.be/' in yt_url %}
+              {% with yt_url|cut:'https://youtu.be/' as video_id %}
+                <div class="mb-4 aspect-w-16 aspect-h-9">
+                  <iframe 
+                    src="https://www.youtube.com/embed/{{ video_id }}"
+                    frameborder="0" allowfullscreen title="YouTube video" controls
+                    class="w-full h-64 rounded"></iframe>
+                </div>
+              {% endwith %}
+            {% else %}
+              <div class="mb-4 text-red-500">Invalid YouTube URL</div>
+            {% endif %}
+          {% endwith %}
+        {% endif %}
+      {% endfor %}
+
+      {% if blog.topics %}
+        <div class="mt-6 mb-2 text-base text-teal-700 font-semibold"></div>
+        {% if blog.topics %}
+          <div class="mt-6 mb-2 flex flex-wrap gap-3">
+            {% for topic in blog.topics %}
+              <button class="px-5 py-2 rounded-full bg-teal-600 text-white text-base font-semibold shadow hover:bg-teal-700 transition">{{ topic }}</button>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <!-- Icons and Meta Info (Consistent layout) -->
+      <div class="flex justify-between items-center mt-4 text-gray-500 text-sm">
+        <div class="flex gap-6 items-center">
+          <span class="flex items-center gap-1">
+            <i class="material-icons text-base">calendar_today</i>
+            {{ blog.created_at|date:"M d, Y" }}
+          </span>
+          <span class="flex items-center gap-1 cursor-pointer">
+            <i class="material-icons text-base">chat_bubble_outline</i> {{ blog.comment_set.count }}
+          </span>
+      <!-- Comments Section - Medium Style -->
+      <div class="mt-10">
+        <h3 class="text-2xl font-bold mb-6">Responses ({{ comments|length }})</h3>
+        <div class="bg-white rounded-xl shadow p-6 mb-8">
+          <div class="flex items-center gap-3 mb-6">
+            {% if user.is_authenticated %}
+              {% if user.profile_photo %}
+                <img src="{{ user.profile_photo.url }}" class="w-10 h-10 rounded-full object-cover border" alt="{{ user.username }}">
+              {% else %}
+                <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-teal-700 text-lg font-bold">{{ user.username|slice:':1'|upper }}</div>
+              {% endif %}
+              <span class="font-semibold text-gray-800">{{ user.username }}</span>
+            {% else %}
+              <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-teal-700 text-lg font-bold">A</div>
+              <span class="font-semibold text-gray-800">Anonymous</span>
+            {% endif %}
+          </div>
+          {% if user.is_authenticated %}
+          <form method="post" action="" class="mb-8">
+            {% csrf_token %}
+            <textarea name="comment_content" rows="2" class="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="What are your thoughts?"></textarea>
+            <button type="submit" class="mt-3 bg-teal-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-teal-700 transition">Respond</button>
+          </form>
+          {% else %}
+          <a href="{% url 'login' %}" class="block w-full bg-gray-100 rounded-lg p-3 text-center text-teal-600 font-semibold hover:underline mb-8">Login to post a response</a>
+          {% endif %}
+          <hr class="my-6">
+          <div class="space-y-8">
+            {% for comment in comments %}
+              <div class="flex items-start gap-4">
+                {% if comment.user.profile_photo %}
+                  <img src="{{ comment.user.profile_photo.url }}" class="w-10 h-10 rounded-full object-cover border" alt="{{ comment.user.username }}">
+                {% else %}
+                  <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-teal-700 text-lg font-bold">{{ comment.user.username|slice:':1'|upper }}</div>
+                {% endif %}
+                <div class="flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="font-semibold text-gray-900">{{ comment.user.username }}</span>
+                    <span class="text-xs text-gray-500">{{ comment.commented_at|timesince }} ago</span>
+                  </div>
+                  <div class="mt-2 text-gray-800">{{ comment.comment|linebreaksbr }}</div>
+                </div>
+              </div>
+            {% empty %}
+              <p class="text-gray-500">No responses yet. Be the first to respond!</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+          {% if user.is_authenticated %}
+          <button id="like-btn" class="flex items-center gap-1 cursor-pointer text-teal-600 font-semibold hover:underline" onclick="likeBlog('{{ blog.id }}')">
+            <i class="material-icons text-base" id="like-icon">thumb_up_off_alt</i> <span id="like-count">{{ blog.like_set.count }}</span>
+          </button>
+          {% else %}
+          <a href="{% url 'login' %}" class="flex items-center gap-1 cursor-pointer text-teal-600 font-semibold hover:underline">
+            <i class="material-icons text-base">thumb_up_off_alt</i> Like
+          </a>
+          {% endif %}
+        </div>
+        <div class="flex gap-6 items-center">
+          {% if user.is_authenticated %}
+          <button id="save-btn" class="flex items-center gap-1 cursor-pointer text-teal-600 font-semibold hover:underline" onclick="saveBlog('{{ blog.id }}')">
+            <i class="material-icons text-base" id="save-icon">bookmark_border</i> <span id="save-count">{{ blog.save_set.count }}</span>
+          </button>
+          <button class="flex items-center gap-1 cursor-pointer text-teal-600 font-semibold hover:underline" onclick="shareBlog()">
+            <i class="material-icons text-base">share</i> Share
+          </button>
+          {% else %}
+          <a href="{% url 'login' %}" class="flex items-center gap-1 cursor-pointer text-teal-600 font-semibold hover:underline">
+            <i class="material-icons text-base">bookmark_border</i> Login to Save
+          </a>
+          <a href="{% url 'login' %}" class="flex items-center gap-1 cursor-pointer text-teal-600 font-semibold hover:underline">
+            <i class="material-icons text-base">share</i> Login to Share
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      <script>
+      function likeBlog(blogId) {
+        fetch(`/blog/${blogId}/like/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Accept': 'application/json',
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('like-count').textContent = data.count;
+          document.getElementById('like-icon').textContent = data.liked ? 'thumb_up' : 'thumb_up_off_alt';
+        });
+      }
+      function saveBlog(blogId) {
+        fetch(`/blog/${blogId}/save/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Accept': 'application/json',
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('save-count').textContent = data.count;
+          document.getElementById('save-icon').textContent = data.saved ? 'bookmark' : 'bookmark_border';
+        });
+      }
+function shareBlog() {
+  navigator.clipboard.writeText(window.location.href).then(function() {
+    showCopyPopup();
+  });
+}
+
+function showCopyPopup() {
+  const popup = document.createElement('div');
+  popup.textContent = 'Blog link copied to clipboard!';
+  popup.className = 'fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-teal-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 text-lg font-semibold';
+  document.body.appendChild(popup);
+  setTimeout(() => {
+    popup.remove();
+  }, 5000);
+}
+      </script>
+    </div>
+
+    <!-- More from Author Section -->
+    <section class="mb-12">
+      <h3 class="text-xl font-bold mb-6">More from {{ blog.author.username }}</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {% for more_blog in more_blogs %}
+          <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
+            <a href="{% url 'blog_detail' more_blog.slug %}">
+              {% if more_blog.cover_image %}
+                <img src="{{ more_blog.cover_image.url }}" alt="Cover for {{ more_blog.title }}" class="w-full h-48 object-cover" />
+              {% endif %}
+            </a>
+            <div class="p-4">
+              <a href="{% url 'blog_detail' more_blog.slug %}" class="hover:underline">
+                <h4 class="font-semibold text-lg mb-1">{{ more_blog.title }}</h4>
+              </a>
+              <span class="text-xs text-gray-500 mb-2 block">{{ more_blog.created_at|date:"M d, Y" }}</span>
+              <p class="text-gray-600 mb-3 text-sm">
+                {{ more_blog.description|truncatewords:15 }}
+              </p>
+              <!-- Meta Info: Consistent with top blog and home page -->
+              <div class="flex justify-between items-center text-gray-500 text-sm mt-2">
+                <div class="flex gap-6 items-center">
+                  <span class="flex items-center gap-1 cursor-pointer">
+                    <i class="material-icons text-base">chat_bubble_outline</i> {{ more_blog.comment_set.count }}
+                  </span>
+                  <span class="flex items-center gap-1 cursor-pointer">
+                    <i class="material-icons text-base">thumb_up_off_alt</i> {{ more_blog.like_set.count }}
+                  </span>
+                  <span class="flex items-center gap-1 cursor-pointer">
+                    <i class="material-icons text-base">bookmark_border</i> {{ more_blog.save_set.count }}
+                  </span>
+                </div>
+                <div class="flex gap-6 items-center">
+                  <span class="flex items-center gap-1 cursor-pointer">
+                    <i class="material-icons text-base">share</i>
+                  </span>
+                </div>
+              </div>
+              {% if more_blog.topics %}
+                <div class="mt-3 flex flex-wrap gap-3">
+                  {% for topic in more_blog.topics %}
+                    <button class="px-5 py-2 rounded-full bg-teal-600 text-white text-base font-semibold shadow hover:bg-teal-700 transition">{{ topic }}</button>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <p class="text-gray-600">No other blogs from this author yet.</p>
+        {% endfor %}
+      </div>
+      <div class="flex justify-between mt-8">
+        <a href="{% url 'user_blogs' blog.author.username %}"
+          class="px-4 py-2 rounded bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition">
+          See all from {{ blog.author.username }}
+        </a>
+      </div>
+    </section>
+
+    <!-- Recommended Blogs Section -->
+    <section class="mb-12">
+      <h3 class="text-xl font-bold mb-6">Recommended for You</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {% for rec_blog in recommended_blogs %}
+          <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
+            <a href="{% url 'blog_detail' rec_blog.slug %}">
+              {% if rec_blog.cover_image %}
+                <img src="{{ rec_blog.cover_image.url }}" alt="Cover for {{ rec_blog.title }}" class="w-full h-48 object-cover" />
+              {% endif %}
+            </a>
+            <div class="p-4">
+              <a href="{% url 'blog_detail' rec_blog.slug %}" class="hover:underline">
+                <h4 class="font-semibold text-lg mb-1">{{ rec_blog.title }}</h4>
+              </a>
+              <span class="text-xs text-gray-500 mb-2 block">{{ rec_blog.created_at|date:"M d, Y" }}</span>
+              <p class="text-gray-600 mb-3 text-sm">
+                {% if rec_blog.preview_content %}
+                  {{ rec_blog.preview_content|truncatewords:15 }}
+                {% else %}
+                  {{ rec_blog.title|truncatewords:15 }}
+                {% endif %}
+              </p>
+              <div class="flex justify-between items-center text-gray-500 text-sm mt-2">
+                <div class="flex gap-6 items-center">
+                  <span class="flex items-center gap-1 cursor-pointer">
+                    <i class="material-icons text-base">chat_bubble_outline</i> {{ rec_blog.comment_set.count }}
+                  </span>
+                  <span class="flex items-center gap-1 cursor-pointer">
+                    <i class="material-icons text-base">thumb_up_off_alt</i> {{ rec_blog.like_set.count }}
+                  </span>
+                  <span class="flex items-center gap-1 cursor-pointer">
+                    <i class="material-icons text-base">bookmark_border</i> {{ rec_blog.save_set.count }}
+                  </span>
+                </div>
+                <div class="flex gap-6 items-center">
+                  <span class="flex items-center gap-1 cursor-pointer">
+                    <i class="material-icons text-base">share</i>
+                  </span>
+                </div>
+              </div>
+              {% if rec_blog.topics %}
+                <div class="mt-3 flex flex-wrap gap-3">
+                  {% for topic in rec_blog.topics %}
+                    <button class="px-5 py-2 rounded-full bg-teal-600 text-white text-base font-semibold shadow hover:bg-teal-700 transition">{{ topic }}</button>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <p class="text-gray-600">No recommended blogs found.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</body>
+</html>
